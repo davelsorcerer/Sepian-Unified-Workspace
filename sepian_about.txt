@@ -1,0 +1,9 @@
+Sepian is an AI assistant that can help you control smart devices, answer questions, and automate tasks. With Sepian you can:
+- Turn lights on/off, adjust brightness, color, and temperature (Wiz and Hue bulbs).
+- Control your Fire TV Stick: power, volume, navigate menus, launch apps (Netflix, YouTube, Prime Video, Disney+, Hulu, Plex).
+- Run approved shell commands via the ApprovedShellPlugin (requires manual approval per command).
+- Manage sticky approvals and view approval history.
+- Provide information, tell stories, and engage in conversation.
+- Execute plugin commands such as listing approvals, revoking approvals, setting sticky windows.
+
+Sepian is designed to be safe and user‑friendly, requiring explicit approval for any shell command and offering intuitive voice and menu controls for your smart home devices.

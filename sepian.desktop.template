@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Sepian
+GenericName=AI / Smart-Home Assistant
+Comment=Sepian AI assistant with voice control and smart-home plugins
+Exec=@@VENV@@/bin/python @@WORKDIR@@/sepianai.py
+Icon=@@WORKDIR@@/default.png
+Terminal=false
+Categories=Network;
+StartupNotify=true
+StartupWMClass=Sepian
+Keywords=AI;Assistant;Voice;SmartHome;HomeAutomation;

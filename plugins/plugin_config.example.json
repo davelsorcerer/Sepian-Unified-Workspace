@@ -1,0 +1,83 @@
+{
+  "HuePlugin": {
+    "enabled": false,
+    "config": {
+      "bridge_ip": "",
+      "username": ""
+    }
+  },
+  "HomeAssistantPlugin": {
+    "enabled": true,
+    "config": {
+      "base_url": "http://your-ha-host:8123",
+      "token": "YOUR_LONG_LIVED_ACCESS_TOKEN",
+      "verify_tls": false,
+      "default_domain": "light",
+      "timeout": 10
+    }
+  },
+  "WizPlugin": {
+    "enabled": false,
+    "config": {
+      "bulb_ips": []
+    }
+  },
+  "TimePlugin": {
+    "enabled": true,
+    "config": {
+      "default_tz": "America/New_York"
+    }
+  },
+  "FireTVPlugin": {
+    "enabled": true,
+    "config": {
+      "ip": "192.168.x.x",
+      "auto_connect": true
+    }
+  },
+  "ApprovedShellPlugin": {
+    "enabled": true,
+    "config": {
+      "allowed_paths": [
+        "/home/davel",
+        "/tmp",
+        "/home/davel/Sepian-Unified-Workspace"
+      ],
+      "max_output_size": 50000,
+      "default_timeout": 15,
+      "max_timeout": 120,
+      "sticky_enabled": false,
+      "sticky_window_seconds": 300,
+      "show_diff_for_modifications": true,
+      "audit_enabled": true
+    }
+  },
+  "SelfDevPlugin": {
+    "enabled": true,
+    "config": {
+      "allowed_paths": [
+        "/home/davel/Sepian-Unified-Workspace"
+      ],
+      "max_file_bytes": 262144,
+      "max_diff_lines": 1500,
+      "max_output_size": 50000,
+      "default_test_timeout": 30,
+      "max_test_timeout": 180,
+      "audit_enabled": true,
+      "auto_snapshot": true
+    }
+  },
+  "TicTacToePlugin": {
+    "enabled": true,
+    "config": {
+      "default_rows": 6,
+      "default_cols": 7,
+      "default_win": 4,
+      "default_difficulty": "medium",
+      "default_opponent": "ai",
+      "hard_ai_time_limit": 4.0,
+      "hard_ai_max_depth": 8,
+      "session_ttl_seconds": 3600
+    }
+  }
+}

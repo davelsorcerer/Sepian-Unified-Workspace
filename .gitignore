@@ -1,0 +1,47 @@
+__pycache__/
+*.pyc
+*.pyo
+
+# Process / runtime state
+*.pid
+*.log
+sepian_person_signal
+
+# Backups and editor cruft
+*.bak*
+*.backup
+*.swp
+*~
+
+# Test / pytest cache
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+.tmp_*.py
+
+# Local Python virtualenv (never commit)
+.venv/
+venv/
+
+# Plugin configuration — live and local backups contain secrets
+# (HA tokens, bridge credentials, internal IPs, etc.)
+# The committed template lives at plugins/plugin_config.example.json
+plugins/plugin_config.json
+plugins/plugin_config.local.json
+
+# OpenCV Haar cascade — local download artifact, the (1) suffix is a
+# duplicate-marker. Safe to ignore; regen with the install script if needed.
+plugins/haarcascade_frontalface_default(1).xml
+plugins/haarcascade_frontalface_default.xml
+
+# Runtime log written by person_detector / cv2 pipeline. Local artifact;
+# can grow unbounded, do not commit.
+plugins/detector.log
+
+# Personal scratch notes (operator-local; not part of the project)
+notebook.txt
+
+# Throwaway / one-off helper scripts in bin/ (underscore-prefixed)
+bin/_*.py

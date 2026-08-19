@@ -1,0 +1,291 @@
+#!/usr/bin/env bash
+# bin/ha — minimal Home Assistant CLI for use from Sepian chat.
+#
+# Talks to HA's REST API over curl. Token is read from $HA_TOKEN,
+# falling back to the HomeAssistantPlugin.config.token in config.json
+# if the env var is unset. URL defaults to http://10.0.0.73 (port 80).
+#
+# Exit codes: 0 ok, 2 user error (bad args), 3 HA / network error.
+
+set -u
+
+# ---------------------------------------------------------------------------
+# Resolve config
+# ---------------------------------------------------------------------------
+WORKSPACE="${SEPIAN_WORKSPACE:-/home/davel/Sepian-Unified-Workspace}"
+HA_URL="${HA_URL:-http://10.0.0.73}"   # no port => :80 by default
+TOKEN="${HA_TOKEN:-}"
+
+# Fall back to config.json if HA_TOKEN is unset.
+if [[ -z "$TOKEN" && -f "$WORKSPACE/config/config.json" ]]; then
+    TOKEN=$(python3 -c '
+import json, sys
+try:
+    with open("'$WORKSPACE'/config/config.json") as f:
+        cfg = json.load(f)
+    print(((cfg.get("HomeAssistantPlugin") or {}).get("config") or {}).get("token", "") or "")
+except Exception:
+    sys.exit(0)
+' 2>/dev/null)
+fi
+
+if [[ -z "$TOKEN" ]]; then
+    echo "error: no token. Set HA_TOKEN or add HomeAssistantPlugin.config.token to config.json" >&2
+    exit 2
+fi
+
+# Default curl opts. --silent shows progress on network errors via --show-error.
+CURL_OPTS=( --silent --show-error --fail-with-body
+            --max-time 10
+            -H "Authorization: Bearer $TOKEN"
+            -H "Content-Type: application/json" )
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+ha_get()  { curl "${CURL_OPTS[@]}" "$HA_URL$1"; }
+ha_post() { curl "${CURL_OPTS[@]}" -X POST -d "$2" "$HA_URL$1"; }
+
+need_arg() {
+    if [[ -z "${2:-}" ]]; then
+        echo "error: $1 requires an argument" >&2
+        exit 2
+    fi
+}
+
+# Color name -> "R,G,B" (0-255). Pastel-friendly palette; add more as needed.
+name_to_rgb() {
+    case "$(echo "$1" | tr '[:upper:]' '[:lower:]')" in
+        red)         echo "255,0,0" ;;
+        green)       echo "0,255,0" ;;
+        blue)        echo "0,0,255" ;;
+        white)       echo "255,255,255" ;;
+        warm)        echo "255,180,107" ;;
+        cool)        echo "200,220,255" ;;
+        yellow)      echo "255,255,0" ;;
+        orange)      echo "255,140,0" ;;
+        purple)      echo "128,0,128" ;;
+        pink)        echo "255,105,180" ;;
+        magenta)     echo "255,0,255" ;;
+        cyan)        echo "0,255,255" ;;
+        teal)        echo "0,128,128" ;;
+        lavender)    echo "180,140,255" ;;
+        amber)       echo "255,191,0" ;;
+        crimson)     echo "220,20,60" ;;
+        navy)        echo "0,0,128" ;;
+        forest)      echo "34,139,34" ;;
+        salmon)      echo "250,128,114" ;;
+        ivory)       echo "255,255,240" ;;
+        dim)         echo "40,40,40" ;;
+        *)           return 1 ;;
+    esac
+}
+
+# brightness 0-255 or 0-100% -> 0-255 integer
+to_brightness() {
+    local v="$1"
+    if [[ "$v" =~ %$ ]]; then
+        local pct="${v%"%"}"
+        if ! [[ "$pct" =~ ^[0-9]+$ ]] || (( pct < 0 || pct > 100 )); then
+            echo "error: brightness % must be 0-100" >&2; exit 2
+        fi
+        echo $(( pct * 255 / 100 ))
+    elif [[ "$v" =~ ^[0-9]+$ ]] && (( v >= 0 && v <= 255 )); then
+        echo "$v"
+    else
+        echo "error: brightness must be 0-255 or 0-100%" >&2; exit 2
+    fi
+}
+
+# color_temp helper: "warm"=370, "cool"=180, "daylight"=250, or raw mireds 220-500.
+to_mireds() {
+    case "$(echo "$1" | tr '[:upper:]' '[:lower:]')" in
+        warm|warmwhite|incandescent) echo 370 ;;
+        soft|softwhite)              echo 300 ;;
+        cool|coolwhite)              echo 180 ;;
+        daylight|bright)             echo 250 ;;
+        *)  if [[ "$1" =~ ^[0-9]+$ ]] && (( $1 >= 150 && $1 <= 500 )); then
+                echo "$1"
+            else
+                echo "error: color_temp must be raw mireds (150-500) or warm/cool/daylight" >&2
+                exit 2
+            fi ;;
+    esac
+}
+
+# Parse a single color arg into "R,G,B"
+parse_color() {
+    local arg="$1"
+    if [[ "$arg" =~ ^#?[0-9a-fA-F]{6}$ ]]; then
+        # hex form, optional leading #
+        local h="${arg#"#"}"
+        printf "%d,%d,%d" 0x"${h:0:2}" 0x"${h:2:2}" 0x"${h:4:2}"
+    elif [[ "$arg" =~ ^[0-9]+,[0-9]+,[0-9]+$ ]]; then
+        echo "$arg"
+    else
+        name_to_rgb "$arg" || { echo "error: unknown color '$arg' (use name, hex, or R,G,B)" >&2; exit 2; }
+    fi
+}
+
+# Wrap HA calls so we get a clean error message + exit code 3 on failure.
+ha_call() {
+    local method="$1" path="$2" body="${3:-}"
+    local out
+    if ! out=$(ha_post "$path" "$body" 2>&1); then
+        echo "ha error: $out" >&2
+        exit 3
+    fi
+    echo "$out"
+}
+
+# ---------------------------------------------------------------------------
+# Commands
+# ---------------------------------------------------------------------------
+cmd_status() {
+    local len=${#TOKEN}
+    local masked=""
+    if (( len > 0 )); then masked="${TOKEN:0:4}***(len=$len)"; fi
+    cat <<EOF
+url:      $HA_URL
+token:    $masked
+ready:    $([[ -n $TOKEN ]] && echo yes || echo no)
+EOF
+}
+
+cmd_list() {
+    local domain="" search="" limit=50
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --domain)  need_arg "$1" "$2"; domain="$2"; shift 2 ;;
+            --search)  need_arg "$1" "$2"; search="$2"; shift 2 ;;
+            --limit)   need_arg "$1" "$2"; limit="$2";  shift 2 ;;
+            *) echo "error: unknown flag $1" >&2; exit 2 ;;
+        esac
+    done
+
+    local qs=""
+    [[ -n "$domain" ]] && qs="?domain=$domain"
+    local resp
+    resp=$(ha_get "/api/registry$qs") || { echo "ha error: $resp" >&2; exit 3; }
+
+    # Compact pretty-print: <entity_id>  <state>  <name>
+    echo "$resp" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+q = '''$search'''.lower()
+n = 0
+for e in data:
+    if q and q not in e.get('name','').lower() and q not in e['entity_id'].lower():
+        continue
+    print(f\"{e['entity_id']:45s}  {e.get('state','?'):10s}  {e.get('name','')}\")
+    n += 1
+    if n >= $limit: break
+sys.stderr.write(f'({n} of {len(data)} shown)')
+"
+}
+
+cmd_get() {
+    need_arg "get" "$1"; local eid="$1"
+    local resp
+    resp=$(ha_get "/api/states/$eid") || { echo "ha error: $resp" >&2; exit 3; }
+    echo "$resp" | python3 -m json.tool
+}
+
+cmd_on() {
+    need_arg "on" "$1"; local eid="$1"
+    ha_call POST "/api/services/homeassistant/turn_on" "{\"entity_id\":\"$eid\"}" >/dev/null
+    echo "ok: $eid on"
+}
+
+cmd_off() {
+    need_arg "off" "$1"; local eid="$1"
+    ha_call POST "/api/services/homeassistant/turn_off" "{\"entity_id\":\"$eid\"}" >/dev/null
+    echo "ok: $eid off"
+}
+
+cmd_toggle() {
+    need_arg "toggle" "$1"; local eid="$1"
+    ha_call POST "/api/services/homeassistant/toggle" "{\"entity_id\":\"$eid\"}" >/dev/null
+    echo "ok: $eid toggled"
+}
+
+cmd_scene() {
+    # `ha scene activate <scene.entity>` or `ha scene on <scene.entity>`
+    local sub="${1:-}" eid="${2:-}"
+    case "$sub" in
+        activate|on|turn_on)
+            need_arg "scene" "$eid"
+            ha_call POST "/api/services/scene/turn_on" "{\"entity_id\":\"$eid\"}" >/dev/null
+            echo "ok: scene $eid activated"
+            ;;
+        *) echo "usage: ha scene {activate|on} <scene.entity>" >&2; exit 2 ;;
+    esac
+}
+
+cmd_brightness() {
+    need_arg "brightness" "$1"; local eid="$1"
+    need_arg "brightness" "$2"; local val
+    val=$(to_brightness "$2")
+    ha_call POST "/api/services/light/turn_on" \
+        "{\"entity_id\":\"$eid\",\"brightness\":$val}" >/dev/null
+    echo "ok: $eid brightness=$val (${2})"
+}
+
+cmd_color() {
+    need_arg "color" "$1"; local eid="$1"
+    need_arg "color" "$2"; local rgb
+    rgb=$(parse_color "$2")
+    ha_call POST "/api/services/light/turn_on" \
+        "{\"entity_id\":\"$eid\",\"rgb_color\":[$rgb]}" >/dev/null
+    echo "ok: $eid color=$2 (rgb $rgb)"
+}
+
+cmd_temp() {
+    need_arg "temp" "$1"; local eid="$1"
+    need_arg "temp" "$2"; local mireds
+    mireds=$(to_mireds "$2")
+    ha_call POST "/api/services/light/turn_on" \
+        "{\"entity_id\":\"$eid\",\"color_temp\":$mireds}" >/dev/null
+    echo "ok: $eid color_temp=$mireds (${2})"
+}
+
+cmd_help() {
+    cat <<EOF
+ha — Home Assistant CLI
+
+Usage: ha <command> [args]
+
+Commands:
+  status                              show URL + redacted token
+  list [--domain X] [--search S]      list entities (default 50)
+  get <entity_id>                     full state + attributes for one entity
+  on <entity_id>                      turn on
+  off <entity_id>                     turn off
+  toggle <entity_id>                  flip current state
+  scene {activate|on} <scene.entity>  activate a HA scene
+  brightness <entity_id> <0-255|0-100%>
+  color <entity_id> <name|hex|R,G,B>  names: red,green,blue,warm,cool,teal,...
+  temp <entity_id> <mireds|warm|cool|daylight>
+  help                                this message
+
+Env: HA_URL (default http://10.0.0.73), HA_TOKEN (or config.json)
+EOF
+}
+
+# ---------------------------------------------------------------------------
+# Dispatch
+# ---------------------------------------------------------------------------
+case "${1:-help}" in
+    status)     shift; cmd_status "$@" ;;
+    list)       shift; cmd_list   "$@" ;;
+    get)        shift; cmd_get    "$@" ;;
+    on)         shift; cmd_on     "$@" ;;
+    off)        shift; cmd_off    "$@" ;;
+    toggle)     shift; cmd_toggle "$@" ;;
+    scene)      shift; cmd_scene  "$@" ;;
+    brightness) shift; cmd_brightness "$@" ;;
+    color)      shift; cmd_color  "$@" ;;
+    temp)       shift; cmd_temp   "$@" ;;
+    help|-h|--help) cmd_help ;;
+    *) echo "error: unknown command '$1' (try 'ha help')" >&2; exit 2 ;;
+esac

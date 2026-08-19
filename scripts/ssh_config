@@ -1,0 +1,15 @@
+# ~/.ssh/config
+#
+# History: the default `id_ed25519` key was never registered with GitHub,
+# which caused every `git push` / fetch against github.com to fail with
+# "Permission denied (publickey)". This block forces ssh to use the
+# dedicated github key (`id_ed25519_gh`) which IS registered, and refuses
+# to even *try* the default key (so we get a clear failure if the new one
+# ever breaks, instead of a confusing silent fallback).
+
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile /home/davel/.ssh/id_ed25519_gh
+    IdentitiesOnly yes
+    PreferredAuthentications publickey

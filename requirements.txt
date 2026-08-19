@@ -1,0 +1,73 @@
+# Sepian AI Assistant - Plugin Edition
+# Core dependencies for the main application
+
+# GUI Framework
+# Tkinter is included with Python by default on most systems
+# Linux: sudo apt install python3-tk
+# macOS: Already included
+# Windows: Already included with Python
+
+# Speech Recognition (for voice input)
+SpeechRecognition>=3.10.0
+
+# HTTP Requests (for API calls)
+requests>=2.31.0
+
+# Audio I/O (required by SpeechRecognition)
+# PyAudio is needed for microphone input
+PyAudio>=0.2.13
+
+# Text-to-Speech (for speaking responses)
+# edge-tts uses Microsoft Edge's TTS service (free, no API key)
+edge-tts>=6.1.9
+
+# Audio playback (for TTS output)
+pygame>=2.5.0
+
+# Image handling (for avatar/viseme rendering)
+Pillow>=10.0.0
+
+# Network discovery (for finding smart home devices)
+# zeroconf is used for mDNS/Bonjour discovery
+zeroconf>=0.130.0
+
+# JSON handling (built-in, but listed for clarity)
+# json (built-in)
+
+# ----------------------------------------------------------------------
+# Optional dependencies (comment out what you don't need)
+# ----------------------------------------------------------------------
+
+# Whisper for offline speech recognition (better accuracy than Google)
+# This downloads ~140MB model on first use
+openai-whisper>=20231117
+
+# PyTorch (CPU build). We pin the CPU wheel because the default PyPI
+# resolver picks the CUDA build (e.g. +cu130) which can fail to run on
+# older GPUs with "cudaErrorNoKernelImageForDevice" — and Whisper is the
+# only torch consumer in this app. To upgrade, install with:
+#   pip install --upgrade --extra-index-url https://download.pytorch.org/whl/cpu \
+#       "torch==<ver>+cpu" "torchaudio==<ver>+cpu"
+torch==2.7.1+cpu
+
+# BLE (Bluetooth Low Energy) for finding smart bulbs
+# Linux: sudo apt install libbluetooth-dev
+# bleak>=0.21.0
+
+# Philips Hue specific (uses requests, already included)
+# No additional packages needed
+
+# WiZ specific (uses requests, already included)  
+# No additional packages needed
+
+# Fire TV control (uses adb, install separately)
+# sudo apt install adb
+
+# ----------------------------------------------------------------------
+# Development dependencies (uncomment if you're developing plugins)
+# ----------------------------------------------------------------------
+
+# pytest>=7.4.0
+# pytest-qt>=4.2.0
+# black>=23.0.0
+# flake8>=6.0.0
