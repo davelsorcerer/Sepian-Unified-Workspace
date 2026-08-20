@@ -7,6 +7,8 @@
 # macOS: Already included
 # Windows: Already included with Python
 
+# Portaudio-dev needed for pyaudio
+# sudo apt install portaudio-dev
 # Speech Recognition (for voice input)
 SpeechRecognition>=3.10.0
 
@@ -47,8 +49,8 @@ openai-whisper>=20231117
 # older GPUs with "cudaErrorNoKernelImageForDevice" — and Whisper is the
 # only torch consumer in this app. To upgrade, install with:
 #   pip install --upgrade --extra-index-url https://download.pytorch.org/whl/cpu \
-#       "torch==<ver>" "torchaudio==<ver>"
-torch==2.7.1
+#       "torch==<ver>+cpu" "torchaudio==<ver>+cpu"
+torch==2.7.1+cpu
 
 # BLE (Bluetooth Low Energy) for finding smart bulbs
 # Linux: sudo apt install libbluetooth-dev
