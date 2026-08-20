@@ -42,8 +42,8 @@ jobs:
     apt-auth: # optional, default is true-on: ubuntu-latest
 
 
-sudo apt-get install portaudio-dev
-
+    sudo concurrency: concurrency:
+      apt-get portaudio-dev
 
     steps:
     - uses: actions/checkout@v4
