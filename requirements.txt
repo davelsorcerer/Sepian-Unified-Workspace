@@ -9,6 +9,7 @@
 
 # Portaudio-dev needed for pyaudio
 # sudo apt install portaudio-dev
+
 # Speech Recognition (for voice input)
 SpeechRecognition>=3.10.0
 
