@@ -3,12 +3,11 @@
 
 # GUI Framework
 # Tkinter is included with Python by default on most systems
-# Linux: sudo apt install python3-tk
+# Linux: sudo apt install python3-tk portaudio-dev
 # macOS: Already included
 # Windows: Already included with Python
 
 # Portaudio-dev needed for pyaudio
-# sudo apt install portaudio-dev
 
 # Speech Recognition (for voice input)
 SpeechRecognition>=3.10.0
