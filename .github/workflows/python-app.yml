@@ -42,7 +42,7 @@ jobs:
     apt-auth: # optional, default is true-on: ubuntu-latest
 
 
-apt-get install portaudio-dev
+sudo apt-get install portaudio-dev
 
 
     steps:
