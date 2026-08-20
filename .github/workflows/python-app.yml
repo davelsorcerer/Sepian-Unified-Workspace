@@ -15,7 +15,35 @@ permissions:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs- name: Setup apt-fast
+  # You may pin to the exact commit or the version.
+  # uses: elijahr/setup-apt-fast@5ad8a7a9138240e86aea5d774326d22e1c3b0cde
+  uses: elijahr/setup-apt-fast@v1.0.0
+  with:
+    # Package manager to use (apt-get, aptitude, or apt)
+    apt-manager: # optional, default is apt-get
+    # Maximum number of connections aria2c uses
+    max-downloads: # optional, default is 16
+    # Maximum number of connections per server
+    max-connections-per-server: # optional, default is 10
+    # Maximum number of connections per file
+    split-connections: # optional, default is 16
+    # Size of each split piece (e.g., 1M, 5M, 10M)
+    min-split-size: # optional, default is 1M
+    # Piece selection algorithm (default, inorder, or geom)
+    piece-algorithm: # optional, default is default
+    # Skip confirmation dialog (true/false)
+    download-before: # optional, default is true
+    # Comma or space-separated list of mirror URLs to use
+    mirrors: # optional, default is 
+    # Display aria2 download file instead of package listing (true/false)
+    verbose-output: # optional, default is false
+    # Enable authentication for sources requiring login (true/false)
+    apt-auth: # optional, default is true-on: ubuntu-latest
+
+
+apt-get install portaudio-dev
+
 
     steps:
     - uses: actions/checkout@v4
