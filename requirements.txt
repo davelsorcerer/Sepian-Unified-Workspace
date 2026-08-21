@@ -50,7 +50,7 @@ openai-whisper>=20231117
 # only torch consumer in this app. To upgrade, install with:
 #   pip install --upgrade --extra-index-url https://download.pytorch.org/whl/cpu \
 #       "torch==<ver>+cpu" "torchaudio==<ver>+cpu"
-torch==2.7.1+cpu
+torch==2.7.1
 
 # BLE (Bluetooth Low Energy) for finding smart bulbs
 # Linux: sudo apt install libbluetooth-dev
