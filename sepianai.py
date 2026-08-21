@@ -3678,7 +3678,7 @@ class SepianApp:
                 # so the user sees what happened instead of a hang.
                 if self._empty_replies >= 2:
                     print(
-                        f"[QUERY] ABORT: {empty_replies} consecutive empty "
+                        f"[QUERY] ABORT: {self._empty_replies} consecutive empty "
                         f"replies from model. Bailing out of recursion.",
                         flush=True,
                     )
