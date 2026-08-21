@@ -4094,7 +4094,7 @@ class SepianApp:
                     result_box["value"] = self._show_shell_approval(payload)
                 else:
                     result_box["value"] = self._show_dev_approval(payload)
-                    print(f"[DEBUG] _dev_approval_request show result: {result_box["value"]}")
+                    print(f"[DEBUG] _dev_approval_request show result: {result_box['value']}")
             except Exception as e:
                 result_box["value"] = {"ok": False, "decision": "deny",
                                        "error": f"approval UI error: {e}"}
@@ -4114,7 +4114,7 @@ class SepianApp:
             return {"ok": False, "decision": "deny",
                     "error": "approval timed out (90s)"}
         return result_box["value"] or {"ok": False, "decision": "deny"}
-        print(f"[DEBUG] _dev_approval_request returning {result_box["value"]}")
+        print(f"[DEBUG] _dev_approval_request returning {result_box['value']}")
 
     def _show_shell_approval(self, payload):
         """Modal for ApprovedShellPlugin.run_command.
